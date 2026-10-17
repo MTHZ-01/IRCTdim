@@ -49,23 +49,25 @@ export function calculateProtectionResults(selectedData, OutPort = false) {
     : selectedData;
 
   // ---- 1. FirstPage (header/meta) ----------------------------------------
+  // Fixed: defaults were "NaN" from PdfComponent, which caused Excel to show NAN blocks.
+  // Now defaults are "" so Excel can skip empty blocks.
   const {
-    Project = "NaN",
-    RefrenceNo = "NaN",
-    Revision = "NaN",
-    RemarkA = "NaN",
-    RemarkG = "NaN",
-    Date = "NaN",
-    NominalVoltage = "NaN",
-    SystemFrequency = "NaN",
-    RatedSCcurrent = "NaN",
-    ConductorTemprature = "NaN",
-    Mode = "NaN",
-    clientName = "NaN",
-    consultantName = "NaN",
-    contractorName = "NaN",
-    DoucumentTitle = "NaN",
-    DocumentNumber = "NaN",
+    Project = "",
+    RefrenceNo = "",
+    Revision = "",
+    RemarkA = "",
+    RemarkG = "",
+    Date = "",
+    NominalVoltage = "",
+    SystemFrequency = "",
+    RatedSCcurrent = "",
+    ConductorTemprature = "",
+    Mode = "",
+    clientName = "",
+    consultantName = "",
+    contractorName = "",
+    DoucumentTitle = "",
+    DocumentNumber = "",
   } = data?.FirstPage || {};
 
   const SecondPageData = data?.SecondPage || {};
@@ -73,9 +75,9 @@ export function calculateProtectionResults(selectedData, OutPort = false) {
   const FourthPageData = data?.FourthPage || {};
 
   // ---- 2. Named constants (relay / CT / conductor) -----------------------
-  const A1 = SecondPageData.Manufacture || "Inv";
-  const A2 = SecondPageData.RelayType || "Inv";
-  const A3 = SecondPageData.ProtectionFunction || "Inv";
+  const A1 = SecondPageData.Manufacture || "";
+  const A2 = SecondPageData.RelayType || "";
+  const A3 = SecondPageData.ProtectionFunction || "";
   const A4 = SecondPageData.IrnA || 0;
   const A5 = SecondPageData.BurdenPhaseVA || 0;
   const A6 = SecondPageData.Ith_Ir || 0;
@@ -118,8 +120,8 @@ export function calculateProtectionResults(selectedData, OutPort = false) {
   const B6_2 = num(SecondPageData.if_max_int_BDP);
   const B6_3 = num(SecondPageData.if_max_ext_BDP);
 
-  const C1 = ThirdPageData.CTName || "Inv";
-  const C3 = ThirdPageData.SelectedCtClass || "Inv";
+  const C1 = ThirdPageData.CTName || "";
+  const C3 = ThirdPageData.SelectedCtClass || "";
   const C4 = num(ThirdPageData.CTPrimary);
   const C5 = num(ThirdPageData.CTSecondary);
   const C6 = num(ThirdPageData.ALF_K_SCC);

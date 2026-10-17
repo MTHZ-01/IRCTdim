@@ -374,92 +374,170 @@ export class IntializationForm extends Component {
       });
   };
 
-  HandleSave = async () => {
-    // Check if running in Electron environment
-    const isElectron = !!(window.electron && window.electron.fs && window.electron.fs.writeFile);
-
-    if (!isElectron) {
-      console.warn('File save operation not available in web environment');
-      alert('File save operation is only available in the desktop application.');
-      return;
-    }
-
-    const Path = this.props.data.Path;
+  // Cross-platform helpers
+  getCurrentProjectData = () => {
     if (!this.props.NewVT && !this.props.NewMeterCt && !this.props.WorkSpace) {
       const projectData = {
         Project: this.props.ProjectData.FirstPage?.Project || "NoName",
         ProjectData: this.props?.ProjectData || "NoName",
       };
-      projectData.ProjectData.Path = Path;
-      const Data = JSON.stringify(projectData);
-      try {
-        await window.electron.fs.writeFile(Path, Data);
-        this.setState({ open: true });
-      } catch (err) {
-        console.error("Failed to save file:", err);
+      // Keep Path in ProjectData for Electron
+      if (this.props.data?.Path) {
+        projectData.ProjectData.Path = this.props.data.Path;
       }
+      return {
+        dataString: JSON.stringify(projectData, null, 2),
+        fileName: `${projectData.Project || "Project"}.IRCT`,
+        rawData: projectData,
+      };
     } else if (this.props.NewVT) {
-      const Data = JSON.stringify(this.props.VT);
-      try {
-        await window.electron.fs.writeFile(Path, Data);
-        this.setState({ open: true });
-      } catch (err) {
-        console.error("Failed to save file:", err);
-      }
+      return {
+        dataString: JSON.stringify(this.props.VT, null, 2),
+        fileName: `${this.props.VT?.FirstPage?.Project || "VT_Project"}.IRVT`,
+        rawData: this.props.VT,
+      };
     } else if (this.props.NewMeterCt) {
-      const Data = JSON.stringify(this.props.MeterCTInfo);
-      try {
-        await window.electron.fs.writeFile(Path, Data);
-        this.setState({ open: true });
-      } catch (err) {
-        console.error("Failed to save file:", err);
-      }
+      return {
+        dataString: JSON.stringify(this.props.MeterCTInfo, null, 2),
+        fileName: `${this.props.MeterCTInfo?.FirstPage?.Project || "MeterCT"}.IRM`,
+        rawData: this.props.MeterCTInfo,
+      };
+    } else {
+      return {
+        dataString: JSON.stringify(this.props.WorkSpace || this.props.data || {}, null, 2),
+        fileName: `Workspace.cfg`,
+        rawData: this.props.WorkSpace,
+      };
     }
   };
+
+  downloadInBrowser = (dataString, fileName) => {
+    const blob = new Blob([dataString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.setState({ open: true });
+  };
+
+  HandleSave = async () => {
+    const isElectron = !!(window.electron && window.electron.fs && window.electron.fs.writeFile);
+    const { dataString, fileName, rawData } = this.getCurrentProjectData();
+
+    if (isElectron) {
+      // --- Electron / Windows: SAVE = overwrite existing Path, NO dialog ---
+      const Path = this.props.data?.Path || this.props.data?.path;
+      if (!Path) {
+        // No existing file path -> act as Save As
+        console.log("No Path found, falling back to Save As");
+        return this.HandleSaveAs();
+      }
+      try {
+        // For IRCT we need to ensure Path is kept inside ProjectData as original did
+        let dataToWrite = dataString;
+        if (!this.props.NewVT && !this.props.NewMeterCt && !this.props.WorkSpace) {
+          // Re-stringify with Path included (compact for disk, as original)
+          const projectData = {
+            Project: this.props.ProjectData.FirstPage?.Project || "NoName",
+            ProjectData: this.props?.ProjectData || "NoName",
+          };
+          projectData.ProjectData.Path = Path;
+          dataToWrite = JSON.stringify(projectData);
+        } else if (this.props.NewVT) {
+          dataToWrite = JSON.stringify(this.props.VT);
+        } else if (this.props.NewMeterCt) {
+          dataToWrite = JSON.stringify(this.props.MeterCTInfo);
+        }
+        await window.electron.fs.writeFile(Path, dataToWrite);
+        this.setState({ open: true });
+      } catch (err) {
+        console.error("Failed to save file:", err);
+      }
+    } else {
+      // --- Web: SAVE = silent download to Downloads folder, NO explorer ---
+      console.log("Web Save - downloading without dialog:", fileName);
+      this.downloadInBrowser(dataString, fileName);
+    }
+  };
+
 
   HandleSaveAs = async () => {
-    // Check if running in Electron environment
     const isElectron = !!(window.electron && window.electron.dialog && window.electron.fs);
+    const { dataString, fileName } = this.getCurrentProjectData();
 
-    if (!isElectron) {
-      console.warn('Save As operation not available in web environment');
-      alert('Save As operation is only available in the desktop application.');
-      return;
+    // Determine filters for Electron
+    let filters = [];
+    let DataForElectron;
+    if (this.props.NewVT) {
+      filters = [{ name: "IRVT Project", extensions: ["IRVT"] }];
+      DataForElectron = JSON.stringify(this.props.VT);
+    } else if (this.props.NewMeterCt) {
+      filters = [{ name: "IRM Project", extensions: ["IRM"] }];
+      DataForElectron = JSON.stringify(this.props.MeterCTInfo);
+    } else if (this.props.WorkSpace) {
+      filters = [{ name: "CFG Project", extensions: ["cfg"] }];
+      DataForElectron = JSON.stringify(this.props.WorkSpace);
+    } else {
+      filters = [{ name: "IRCT Project", extensions: ["IRCT"] }];
+      const projectData = {
+        Project: this.props.ProjectData.FirstPage?.Project || "NoName",
+        ProjectData: this.props?.ProjectData || "NoName",
+      };
+      DataForElectron = JSON.stringify(projectData);
     }
 
-    try {
-      let filters = [];
-      let Data;
-      if (this.props.NewVT) {
-        filters = [{ name: "IRVT Project", extensions: ["IRVT"] }];
-        Data = JSON.stringify(this.props.VT);
-      } else if (this.props.NewMeterCt) {
-        filters = [{ name: "IRM Project", extensions: ["IRM"] }];
-        Data = JSON.stringify(this.props.MeterCTInfo);
-      } else if (this.props.WorkSpace) {
-        filters = [{ name: "CFG Project", extensions: ["cfg"] }];
-        Data = JSON.stringify(this.props.WorkSpace);
-      } else {
-        filters = [{ name: "IRCT Project", extensions: ["IRCT"] }];
-        const projectData = {
-          Project: this.props.ProjectData.FirstPage?.Project || "NoName",
-          ProjectData: this.props?.ProjectData || "NoName",
-        };
-        Data = JSON.stringify(projectData);
+    if (isElectron) {
+      // --- Electron / Windows: SAVE AS = open explorer dialog ---
+      try {
+        const result = await window.electron.dialog.showSaveDialog({
+          title: "Save As",
+          defaultPath: fileName,
+          filters,
+        });
+        if (!result.canceled && result.filePath) {
+          await window.electron.fs.writeFile(result.filePath, DataForElectron);
+          this.setState({ open: true });
+        }
+      } catch (err) {
+        console.error("Failed to save as:", err);
       }
-      const result = await window.electron.dialog.showSaveDialog({
-        title: "Save As",
-        defaultPath: "Project",
-        filters,
-      });
-      if (!result.canceled && result.filePath) {
-        await window.electron.fs.writeFile(result.filePath, Data);
-        this.setState({ open: true });
+    } else {
+      // --- Web: SAVE AS = try to open file picker (explorer), fallback to download ---
+      if (window.showSaveFilePicker) {
+        try {
+          const ext = fileName.split(".").pop();
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [
+              {
+                description: filters[0]?.name || "Project",
+                accept: { "application/json": ["." + ext.toLowerCase()] },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(dataString);
+          await writable.close();
+          this.setState({ open: true });
+          return;
+        } catch (err) {
+          if (err.name === "AbortError") {
+            console.log("Save As canceled");
+            return;
+          }
+          console.warn("showSaveFilePicker failed, falling back to download:", err);
+        }
       }
-    } catch (err) {
-      console.error("Failed to save as:", err);
+      // Fallback: download (still Save As, but browser will show save dialog if configured)
+      console.log("Web Save As - downloading with picker fallback:", fileName);
+      this.downloadInBrowser(dataString, fileName);
     }
   };
+
 
   selectDirectory = () => {
     // Check if running in Electron environment

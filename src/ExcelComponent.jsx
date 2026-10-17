@@ -84,12 +84,24 @@ function buildWorksheetParts(results) {
     addMerge(r - 1, 0, r - 1, 4);
     addRow([]);
 
+    // ---- Helper: check if a value is effectively empty / placeholder ----
+    const isPlaceholder = (v) => {
+        if (v === undefined || v === null || v === "") return true;
+        if (typeof v === "number") return isNaN(v) || v === 0 && false; // keep 0 as valid
+        if (typeof v !== "string") return false;
+        const t = v.trim().toLowerCase();
+        return t === "" || t === "nan" || t === "inv" || t === "n/a" || t === "na";
+    };
+
     // ---- Generic "info block" renderer for meta / relay / CT / conductor ----
+    // Skips the whole block if every value is a placeholder, and skips individual placeholder rows
     const infoBlock = (title, obj, style = sectionHeader) => {
+        const entries = Object.entries(obj).filter(([, value]) => !isPlaceholder(value));
+        if (entries.length === 0) return; // <-- don't render Project Information when all NAN
+
         addSectionHeader(title, style);
-        Object.entries(obj).forEach(([key, value]) => {
-            const display = value === undefined || value === null || value === "" ? "NAN" : value;
-            addDataRow(`${key}:`, display);
+        entries.forEach(([key, value]) => {
+            addDataRow(`${key}:`, value);
         });
         addRow([]);
     };

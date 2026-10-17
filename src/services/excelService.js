@@ -76,6 +76,15 @@ function getActualData(fileData) {
     return fileData;
 }
 
+// ─── HELPER: placeholder check (same as ExcelComponent.jsx) ───
+const isPlaceholder = (v) => {
+    if (v === undefined || v === null || v === "") return true;
+    if (typeof v === "number") return isNaN(v);
+    if (typeof v !== "string") return false;
+    const t = v.trim().toLowerCase();
+    return t === "" || t === "nan" || t === "inv" || t === "n/a" || t === "na";
+};
+
 // ─── REFACTORED: extractIRCTData using protection calculations ─────
 export const extractIRCTData = (fileData) => {
     const data = getActualData(fileData);
@@ -83,10 +92,11 @@ export const extractIRCTData = (fileData) => {
     const rows = [];
 
     const addInfoBlock = (title, obj) => {
+        const entries = Object.entries(obj).filter(([, v]) => !isPlaceholder(v));
+        if (entries.length === 0) return; // skip block if all NAN/Inv
         rows.push({ isHeader: true, text: title });
-        Object.entries(obj).forEach(([key, value]) => {
-            const display = (value === undefined || value === null || value === "") ? "NAN" : value;
-            rows.push({ type: 'data', label: `${key}:`, value: display });
+        entries.forEach(([key, value]) => {
+            rows.push({ type: 'data', label: `${key}:`, value });
         });
         rows.push({ isSpacer: true });
     };
