@@ -1,0 +1,64 @@
+Windows Registry Editor Version 5.00
+
+; Register .irct files
+[HKEY_CLASSES_ROOT\.irct]
+@="IRCTFile"
+"Content Type"="application/irct"
+
+[HKEY_CLASSES_ROOT\IRCTFile]
+@="IRCT Project File"
+"FriendlyTypeName"="Current Transformer Calculation Project"
+
+[HKEY_CLASSES_ROOT\IRCTFile\DefaultIcon]
+@="C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Power Calculation Suite\\resources\\RedSnake.ico,0"
+
+[HKEY_CLASSES_ROOT\IRCTFile\shell]
+@="open"
+
+[HKEY_CLASSES_ROOT\IRCTFile\shell\open]
+@="&Open with Power Calculation Suite"
+
+[HKEY_CLASSES_ROOT\IRCTFile\shell\open\command]
+@="\"C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Power Calculation Suite\\PowerCalculationSuite.exe\" \"%1\""
+
+; Register .irm files
+[HKEY_CLASSES_ROOT\.irm]
+@="IRMFile"
+"Content Type"="application/irm"
+
+[HKEY_CLASSES_ROOT\IRMFile]
+@="IRM Meter File"
+"FriendlyTypeName"="Meter/CT Configuration File"
+
+[HKEY_CLASSES_ROOT\IRMFile\DefaultIcon]
+@="C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Power Calculation Suite\\resources\\YellowSnake.ico,0"
+
+[HKEY_CLASSES_ROOT\IRMFile\shell]
+@="open"
+
+[HKEY_CLASSES_ROOT\IRMFile\shell\open]
+@="&Open with Power Calculation Suite"
+
+[HKEY_CLASSES_ROOT\IRMFile\shell\open\command]
+@="\"C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Power Calculation Suite\\PowerCalculationSuite.exe\" \"%1\""
+
+; Register .irvt files
+[HKEY_CLASSES_ROOT\.irvt]
+@="IRVTFile"
+"Content Type"="application/irvt"
+
+[HKEY_CLASSES_ROOT\IRVTFile]
+@="IRVT Voltage Transformer File"
+"FriendlyTypeName"="Voltage Transformer Configuration File"
+
+[HKEY_CLASSES_ROOT\IRVTFile\DefaultIcon]
+@="C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Power Calculation Suite\\resources\\WhiteSnake.ico,0"
+
+[HKEY_CLASSES_ROOT\IRVTFile\shell]
+@="open"
+
+[HKEY_CLASSES_ROOT\IRVTFile\shell\open]
+@="&Open with Power Calculation Suite"
+
+[HKEY_CLASSES_ROOT\IRVTFile\shell\open\command]
+@="\"C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Power Calculation Suite\\PowerCalculationSuite.exe\" \"%1\""

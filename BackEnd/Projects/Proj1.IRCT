@@ -1,0 +1,186 @@
+{
+    "Project": "",
+    "ProjectData": {
+        "FirstPage": {
+            "ShouldShowForm": true,
+            "ShowPDFGen": false,
+            "isActive": true,
+            "Project": "",
+            "RefrenceNo": "",
+            "Revision": "",
+            "RemarkA": "",
+            "Date": "",
+            "DoucumentTitle": "",
+            "imgUrlClient": null,
+            "imgUrlConsultant": null,
+            "imgUrlContractor": null,
+            "clientName": "",
+            "consultantName": "",
+            "contractorName": "",
+            "DocumentNumber": "",
+            "rows": [
+                {
+                    "rev": "",
+                    "date": "",
+                    "prepared": "",
+                    "checked": "",
+                    "authorized": "",
+                    "approved": "",
+                    "issuedFor": ""
+                }
+            ]
+        },
+        "SecondPage": {
+            "ShouldShowForm": true,
+            "wholeData": {
+                "relays": [
+                    {
+                        "name": "Model1",
+                        "manufacture": "Schneider-Micom",
+                        "relay_types": [
+                            {
+                                "name": "P12x",
+                                "Ith_Ir": 100,
+                                "protection_functions": [
+                                    {
+                                        "name": "50/51+N"
+                                    },
+                                    {
+                                        "name": "HI REF"
+                                    }
+                                ],
+                                "cal_Acc_Tos": [
+                                    {
+                                        "name": "IEC-P"
+                                    },
+                                    {
+                                        "name": "IEC-PX"
+                                    },
+                                    {
+                                        "name": "IEC-TP"
+                                    },
+                                    {
+                                        "name": "ANSI-C/T"
+                                    },
+                                    {
+                                        "name": "ANSI-X"
+                                    }
+                                ],
+                                "irn_a_values": [
+                                    {
+                                        "value": 2,
+                                        "BurdenPhaseVA": 10
+                                    },
+                                    {
+                                        "value": 5,
+                                        "BurdenPhaseVA": 23
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Model2",
+                        "manufacture": "Simense",
+                        "relay_types": []
+                    }
+                ]
+            },
+            "Manufacture": "Schneider-Micom",
+            "ManufactureList": [
+                "Schneider-Micom",
+                "Simense"
+            ],
+            "RelayType": "P12x",
+            "RelayTypeList": [
+                "P12x"
+            ],
+            "ProtectionFunction": "50/51+N",
+            "ProtectionFunctionList": [
+                "50/51+N",
+                "HI REF"
+            ],
+            "IrnA": 5,
+            "IrnAList": [
+                2,
+                5
+            ],
+            "BurdenPhaseVA": 23,
+            "BurdenPhaseVAList": [
+                10,
+                23
+            ],
+            "Cal_Acc_ToVA": "IEC-P",
+            "Cal_Acc_ToVAList": [
+                "IEC-P",
+                "IEC-PX",
+                "IEC-TP",
+                "ANSI-C/T",
+                "ANSI-X"
+            ],
+            "Ith_Ir": "",
+            "Ith_IrList": [
+                100
+            ],
+            "Iph_one": "8",
+            "Iph_two": "4",
+            "Ie_two": "6",
+            "Iee_one": "6",
+            "IPh_max": "6",
+            "Ie_max": "4",
+            "if_max_int_HEFP": "5",
+            "if_max_ext_HEFP": "3",
+            "if_max_int_LDP": "2",
+            "if_max_ext_LDP": "8",
+            "if_max_int_TDP": "3",
+            "if_max_ext_TDP": "1",
+            "if_max_int_BDP": "2",
+            "if_max_ext_BDP": "5",
+            "Is": "3",
+            "Us": "8",
+            "Ifs": "5",
+            "TsysDP": "5",
+            "TsysLDP": "3",
+            "TsysTDP": "5",
+            "RPrime": "5",
+            "XPrime": "2",
+            "Length": "2",
+            "Z1Set": "1",
+            "XR": "2",
+            "K2": "1",
+            "Vk2": "3",
+            "R2": "1",
+            "Vk3": "2",
+            "R3": "2",
+            "nCT": "8"
+        },
+        "ThirdPage": {
+            "ShouldShowForm": true,
+            "CTClassVals": [
+                "5p/10p",
+                "5PR/10PR"
+            ],
+            "SelectedCtClass": "5PR/10PR",
+            "CTName": "Random CT",
+            "CTPrimary": "5",
+            "CTSecondary": "5",
+            "ALF_K_SCC": "3",
+            "KTD": "8",
+            "Sr": "4",
+            "Rr": "3",
+            "CTResistance": "5",
+            "EK": "4",
+            "Ie": "3",
+            "Vt": "2",
+            "Vk": "1",
+            "Ik": "1"
+        },
+        "FourthPage": {
+            "ShouldShowForm": true,
+            "Length": "12",
+            "CrossSection": "15",
+            "Material": "Cu"
+        },
+        "activeStep": 0
+    }
+}

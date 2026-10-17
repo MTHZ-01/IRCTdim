@@ -1,0 +1,2 @@
+asgiref==3.12.1
+django_nested_inline==0.4.6
