@@ -2,13 +2,17 @@
 import os
 import sys
 
+
 def main():
     """Run administrative tasks."""
-    if getattr(sys, 'frozen', False):
-        # If running in a PyInstaller bundle, disable autoreload
-        sys.argv.append('--noreload')
+    # Only disable the autoreloader for runserver when frozen.
+    # Do NOT append --noreload for migrate or other commands.
+    if getattr(sys, "frozen", False):
+        if len(sys.argv) > 1 and sys.argv[1] == "runserver":
+            if "--noreload" not in sys.argv:
+                sys.argv.append("--noreload")
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'IRCT.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "IRCT.settings")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -19,5 +23,6 @@ def main():
         ) from exc
     execute_from_command_line(sys.argv)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

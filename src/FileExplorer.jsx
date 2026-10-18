@@ -100,14 +100,25 @@ class FileExplorer extends Component {
         });
     };
 
-    fetchFileTree = async (dir = "C:\\KnoladgeBased_initiative\\Project Abstract") => {
+    fetchFileTree = async (dir) => {
+        if (!dir || typeof dir !== "string" || dir.trim() === "") {
+            return;
+        }
         try {
             const response = await fetch(AURL + "filetree", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ dir: dir }),
             });
-            if (!response.ok) throw new Error("Error fetching file tree");
+            if (!response.ok) {
+                let detail = "";
+                try {
+                    detail = JSON.stringify(await response.json());
+                } catch (_) {
+                    detail = await response.text();
+                }
+                throw new Error("Error fetching file tree: " + detail);
+            }
             const data = await response.json();
             if (!data || Object.keys(data).length === 0) {
                 throw new Error("No data found");
@@ -121,7 +132,8 @@ class FileExplorer extends Component {
     };
 
     componentDidMount() {
-        this.fetchFileTree();
+        // Do not call filetree with a hard-coded Windows path on Linux.
+        // Tree loads after the user selects a real directory / workspace.
         window.addEventListener('mousemove', this.handleMouseMove);
         window.addEventListener('mousemove', this.handleResize);
         window.addEventListener('mouseup', this.stopResize);
