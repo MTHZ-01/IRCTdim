@@ -1,0 +1,173 @@
+name: Release Linux (.deb)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without v prefix (e.g. 1.0.1)"
+        required: true
+        default: "1.0.0"
+      prerelease:
+        description: "Mark as pre-release?"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system packages (for .deb packaging)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            fakeroot \
+            dpkg \
+            rpm \
+            libarchive-tools
+
+      - name: Set app version
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${{ inputs.version }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('package.json version ->', pkg.version);
+          "
+
+      - name: Install Python deps + build Django backend binary
+        working-directory: BackEnd/IRCT
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            django \
+            django-cors-headers \
+            django-nested-inline \
+            asgiref \
+            pyinstaller
+
+          pyinstaller --onefile \
+            --name manage \
+            --console \
+            --hidden-import=django \
+            --hidden-import=corsheaders \
+            --hidden-import=nested_inline \
+            --hidden-import=django.contrib.admin \
+            --hidden-import=django.contrib.auth \
+            --hidden-import=django.contrib.contenttypes \
+            --hidden-import=django.contrib.sessions \
+            --hidden-import=django.contrib.messages \
+            --hidden-import=django.contrib.staticfiles \
+            --collect-all django \
+            --collect-all corsheaders \
+            --collect-all nested_inline \
+            manage.py
+
+          chmod +x dist/manage
+          ls -la dist/manage
+
+          # Ensure migrations work on the frozen binary
+          ./dist/manage migrate --run-syncdb
+
+      - name: Install npm dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build Linux .deb
+        run: |
+          npx electron-forge make --platform=linux --arch=x64
+
+      - name: Locate .deb artifact
+        id: deb
+        run: |
+          DEB_PATH=$(find out/make -type f -name "*.deb" | head -n 1)
+          if [ -z "$DEB_PATH" ]; then
+            echo "No .deb found under out/make"
+            find out -type f | head -n 100
+            exit 1
+          fi
+          echo "deb_path=$DEB_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found: $DEB_PATH"
+          ls -lah "$DEB_PATH"
+
+      - name: Upload .deb as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb
+          path: ${{ steps.deb.outputs.deb_path }}
+
+      - name: Create GitHub Release + attach .deb
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ inputs.version }}"
+          TAG="v${VERSION}"
+          DEB_PATH="${{ steps.deb.outputs.deb_path }}"
+          DEB_NAME=$(basename "$DEB_PATH")
+
+          # Create annotated tag if it does not already exist on remote
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Release $TAG"
+          fi
+
+          # Push tag (ignore error if already on remote)
+          git push origin "$TAG" || true
+
+          PRERELEASE_FLAG=""
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          # Create release if missing, then upload asset
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists – uploading asset"
+            gh release upload "$TAG" "$DEB_PATH" --clobber
+          else
+            gh release create "$TAG" "$DEB_PATH" \
+              --title "Power Calculation Suite $TAG (Linux)" \
+              --notes "$(cat <<EOF
+          ## Power Calculation Suite $TAG – Linux
+
+          ### Install (Debian / Ubuntu amd64)
+
+          \`\`\`bash
+          sudo dpkg -i ${DEB_NAME}
+          sudo apt-get install -f
+          \`\`\`
+
+          ### Notes
+          - Bundled Django backend (no system Python required to run the app)
+          - App data / SQLite: \`~/.power-calculation-suite/\`
+          - Built automatically via GitHub Actions
+          EOF
+          )" \
+              $PRERELEASE_FLAG
+          fi
